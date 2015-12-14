@@ -5,6 +5,9 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "redis": "*"
+        "redis": "*",
+		"aws-sdk": ">=2.2.22",
+		"q": ">=1.4.1",
+		"chalk": ">=1.1.1"
     }
 }
