@@ -1,14 +1,25 @@
-var redis = require("redis");
 var http = require('http');
 
+// Require libraries.
+var aws = require( "aws-sdk" );
+var Q = require( "q" );
+var chalk = require( "chalk" );
+
+// Create an instance of our SQS Client.
+var sqs = new aws.SQS({
+    region: config.aws.region,
+    accessKeyId: config.aws.accessKeyId,
+    secretAccessKey: config.aws.secretAccessKey,
+
+    // For every request in this demo, I'm going to be using the same QueueUrl; so,
+    // rather than explicitly defining it on every request, I can set it here as the
+    // default QueueUrl to be automatically appended to every request.
+    params: {
+        QueueUrl: config.aws.queueUrl
+    }
+});
+
 var service_name = "students_micro_service";
-
-clientRISub = redis.createClient();	// Subscribes to ri channel
-clientRIPub = redis.createClient(); // Publishes to ri channel
-
-
-clientRISub.subscribe(service_name);
-
 var pub_channel = "referential_integrity";
 
 var _ = require('lodash');
@@ -16,7 +27,10 @@ var required_keys = ['first_name', 'last_name', 'uni'];
 var no_delete_keys = ['first_name', 'last_name', 'uni', 'courses'];
 var host = 'localhost';
 
-clientRIPub = redis.createClient(); // Publishes to ri channel
+// Proxy the appropriate SQS methods to ensure that they "unwrap" the common node.js
+// error / callback pattern and return Promises. Promises are good and make it easier to
+// handle sequential asynchronous data.
+var sendMessage = Q.nbind( sqs.sendMessage, sqs );
 
 exports.find = function(req, res, next) {
 	const db = req.app.locals.db;
@@ -126,10 +140,27 @@ exports.remove = function(req, res, next) {
 
 							//  Publishing to referential integrity channel the event
 							var event_message = {
-								'sender' : 'students_micro_service',
-								'service_action' : 'delete student',
-								'uni': uni_param }
-							clientRIPub.publish(pub_channel, JSON.stringify(event_message));
+								sender : 'students_micro_service',
+								service_action : 'delete student',
+								uni: uni_param,
+								pub_channel : pub_channel
+							};
+							sendMessage({
+							    //  Publishing to referential integrity channel the event			    
+							    MessageBody: JSON.stringify(event_message)
+							})
+							.then(
+							    function handleSendResolve( data ) {
+							        console.log( chalk.green( "Message sent:", data.MessageId ) );
+							    }
+							)
+							// Catch any error (or rejection) that took place during processing.
+							.catch(
+							    function handleReject( error ) {
+							        console.log( chalk.red( "Unexpected Error:", error.message ) );
+							    }
+							);
+
 						} else {
 							var err = new Error('Database error');
 							err.status = 500;
@@ -283,14 +314,29 @@ exports.add_course = function(req, res, next) {
 
 																				//  Publishing to referential integrity channel the event
 																				var event_message = {
-																					'sender' : 'students_micro_service',
-																					'service_action' : 'update course add student',
-																					'course_id': course_id,
-																					'uni': uni_param,
-																					'datetime' : datetime,
-																					'courseList' : courseList
-																				}
-																				clientRIPub.publish(pub_channel, JSON.stringify(event_message));
+																					sender : 'students_micro_service',
+																					service_action : 'update course add student',
+																					course_id: course_id,
+																					uni: uni_param,
+																					datetime : datetime,
+																					courseList : courseList,
+																					pub_channel : pub_channel
+																				};
+																				sendMessage({
+																				    //  Publishing to referential integrity channel the event			    
+																				    MessageBody: JSON.stringify(event_message)
+																				})
+																				.then(
+																				    function handleSendResolve( data ) {
+																				        console.log( chalk.green( "Message sent:", data.MessageId ) );
+																				    }
+																				)
+																				// Catch any error (or rejection) that took place during processing.
+																				.catch(
+																				    function handleReject( error ) {
+																				        console.log( chalk.red( "Unexpected Error:", error.message ) );
+																				    }
+																				);
 																			} else {
 																				var err = new Error('Database error');
 																				err.status = 500;
@@ -345,13 +391,29 @@ exports.remove_course = function(req, res, next) {
 																 	if (error === null) {
 																		res.sendStatus(200);
 																		//  Publishing to referential integrity channel the event
-
 																		var event_message = {
-																			'sender' : 'students_micro_service',
-																			'service_action' : 'update course delete student',
-																			'course_id': course_id,
-																			'uni': uni_param}
-																		clientRIPub.publish(pub_channel, JSON.stringify(event_message));
+																			sender : 'students_micro_service',
+																			service_action : 'update course delete student',
+																			course_id: course_id,
+																			uni: uni_param,
+																			pub_channel : pub_channel
+																		};
+
+																		sendMessage({
+																		    //  Publishing to referential integrity channel the event			    
+																		    MessageBody: JSON.stringify(event_message)
+																		})
+																		.then(
+																		    function handleSendResolve( data ) {
+																		        console.log( chalk.green( "Message sent:", data.MessageId ) );
+																		    }
+																		)
+																		// Catch any error (or rejection) that took place during processing.
+																		.catch(
+																		    function handleReject( error ) {
+																		        console.log( chalk.red( "Unexpected Error:", error.message ) );
+																		    }
+																		);
 
 																	} else {
 																		var err = new Error('Database error');

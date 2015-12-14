@@ -10,19 +10,9 @@ var chalk = require( "chalk" );
 var express = require('express');
 var router = express.Router();
 var students = require('./students_controller');
-var redis = require('redis');
 var config = require('./config/config');
 
-
-clientRISub = redis.createClient(); // Subscribes to ri channel
-
 var subChannel = "students_micro_service";
-
-clientRISub.subscribe(subChannel);
-
-clientRISub.on("subscribe", function (channel, count) {
-    console.log("Subscribed to " + channel + " channel.")
-});
 
 // Create an instance of our SQS Client.
 var sqs = new aws.SQS({
@@ -67,10 +57,9 @@ module.exports = function(app) {
         .post(students.add_course)
         .delete(students.remove_course);
 
-    clientRISub.on("message", function (channel, message) { // Listens for referential integrity channel JSON messgages
-        console.log("Channel name: " + channel);
+    function serviceActions (message) { // Listens for referential integrity channel JSON messgages
         console.log("Message: " + message);
-        
+
         //Switch statement for three RI cases
         var obj = JSON.parse(message);
         var call_number = parseInt(obj.course_id);
@@ -130,10 +119,10 @@ module.exports = function(app) {
                 });
                 break;
             default :
-                console.log("Service action not found " + obj.service_action);
+                console.log("Service action not found or undefined :" + obj.service_action);
                 break;
         }
-    });
+    };
 
     // When pulling messages from Amazon SQS, we can open up a long-poll which will hold open
     // until a message is available, for up to 20-seconds. If no message is returned in that
@@ -166,6 +155,7 @@ module.exports = function(app) {
 
                 }
 
+                serviceActions (data.Messages[0].Body);
                 // ---
                 // TODO: Actually process the message in some way :P
                 // ---
