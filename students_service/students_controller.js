@@ -1,5 +1,3 @@
-'use strict';
-
 var redis = require("redis");
 var http = require('http');
 

@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === 'development') {
   app.locals.cache = 'memory';
 }
 
-MongoClient.connect(config.db, { promiseLibrary: Promise }, (err, db) => {
+MongoClient.connect(config.db, { promiseLibrary: Promise }, function(err, db) {
   if (err) {
     logger.warn("Failed to connect to the database. ${err.stack}");
   }
