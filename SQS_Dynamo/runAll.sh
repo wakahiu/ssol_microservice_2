@@ -4,10 +4,10 @@
 # 1. make sure gnome-terminal is installed -> sudo apt-get install gnome-terminal
 
 # INSTRUCTIONS:
-# 2. get file permisisons -> chmod u+x setUpSSOL.sh
+# 2. get file permisisons -> chmod u+x <script_name>.sh
 # 3. SET THE WORKING DIRECTORY
 WD=~/Desktop/ssol_microservices_2/SQS_Dynamo
-# 4. run "source setUpSSOL.sh" to execute the script as a TCL
+# 4. run "source <script_name>.sh" to execute the script as a TCL
 
 STUDENTS="		
 	cd $WD/studentsDynamoDB;  
