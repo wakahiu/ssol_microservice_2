@@ -38,7 +38,7 @@ In addition to the AWS setup, each client must be configured in the `config.json
 ## Setup 
 
 ### Setup Script (For Users with gnome-terminal installed)
-In the working directory, the `setupTabs.sh` shell script can be executed to set up the environment.  Instructions on configuring the script are seen with the script.  Once configured, the script can be executed from the command line:
+In the working directory, the `runAll.sh` shell script can be executed to set up the environment.  Instructions on configuring the script are seen with the script.  Once configured, the script can be executed from the command line:
 
 `$ source runAll.sh`
 
