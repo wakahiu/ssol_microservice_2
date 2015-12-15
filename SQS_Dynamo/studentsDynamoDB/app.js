@@ -85,7 +85,14 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 
 				var incoming = JSON.parse(data.Messages[ 0 ].Body);
 				var controller = require("./controller")
-				controller.echoMessage(incoming);
+				//controller.echoMessage(incoming);
+
+
+				if (incoming.Header.OP.toUpperCase() == 'GET') {
+					console.log("get happening");
+					controller.GEThandler(incoming);
+					// To Do: Get from DynamoDB
+				}
 
 
 

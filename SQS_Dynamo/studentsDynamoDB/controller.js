@@ -20,6 +20,25 @@ exports.echoMessage = function (incoming){
 	ResponseMessageTo(incoming.Header.ResQ, incoming)
 }
 
+exports.GEThandler = function (incoming){
+
+var response = {}
+var header = {}
+var studentInfo = {}
+
+studentInfo['name'] = 'Jonathan';
+
+//header['OP'] = clientQs[clientNames[ind]].Req.Header.OP;
+//header['ResQ'] = config.aws.queueUrl+Qin;
+//header['ID'] = clientQs[clientNames[ind]].Req.Header.ID;
+header['CID'] = incoming.Header.CID;
+response['Header'] = header;
+response['Body'] = studentInfo;
+
+	// echo the same message back to the client
+	ResponseMessageTo(incoming.Header.ResQ, response)
+}
+
 
 ResponseMessageTo = function(SQS_url, message){
 		// Create an instance of our SQS Client.
@@ -65,4 +84,3 @@ ResponseMessageTo = function(SQS_url, message){
 			}
 		);
 }
-
