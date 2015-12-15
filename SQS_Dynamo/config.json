@@ -1,0 +1,39 @@
+{ 
+	"aws":{
+		"accessID"	: "<id>",
+		"secretKey"	: "<its_a_secret_kedd>",
+		"region"	: "<us-___>",
+		"queueUrl"	: "<https://____.amazonaws.com/path2queues/"
+	},
+	"clients":{
+		"client0":{
+			"Qname_out"	: "client0_out",
+			"Qname_in"	: "client0_in",
+			"Req":{
+				"Header":{
+					"OP":"GET",
+					"ID":1234			
+				},
+				"Body":"this is a test"	
+			}
+		},
+		"client1":{
+			"Qname_out"	: "client1_out",
+			"Qname_in"	: "client1_in",
+			"Req":{
+				"Header":{
+					"OP":"PUT",
+					"ID":5678			
+				},
+				"Body":{
+					"name":"Peter"
+				}	
+			}
+		}
+	},
+	"gateway":{
+		"Qname_out"	:	"K12"
+	}
+
+}
+
