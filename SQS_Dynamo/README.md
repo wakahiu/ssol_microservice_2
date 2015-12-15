@@ -5,21 +5,21 @@
 1. Be sure to have an AWS account
 2. Update `conf.json` in accordance with the AWS credentials of the account:
 
-⋅⋅*aws.accessID
+⋅⋅* aws.accessID
 
-⋅⋅*aws.secretKey
+⋅⋅* aws.secretKey
 
-⋅⋅*aws.region
+⋅⋅* aws.region
 
-⋅⋅*aws.queueUrl (this is the url path and does not include the Queue name)
+⋅⋅* aws.queueUrl (this is the url path and does not include the Queue name)
 
 3. Create SQS queues using the online AWS console.  Be sure to name the queues in accordance with the ones listed in the `congif.json` file:
 
-⋅⋅*clients.`<client_name>`.Qname_out
+⋅⋅* clients.`<client_name>`.Qname_out
 
-⋅⋅*clients.`<client_name>`.Qname_in
+⋅⋅* clients.`<client_name>`.Qname_in
 
-⋅⋅*gateway.`<client_name>`.Qname_out
+⋅⋅* gateway.`<client_name>`.Qname_out
 
 
 ## Additional Configuration
