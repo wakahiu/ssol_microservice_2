@@ -20,7 +20,6 @@ var table = "micro";
 
 
 // Put item:
-//*/
 var sample_id = "jc4267";
 var params = {
     TableName:table,

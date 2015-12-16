@@ -94,22 +94,16 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 				// DYNAMODB implementation:
 				switch(incoming.Header.OP.toUpperCase()){
 					case 'GET':
-					/*
-						if(incoming.Header.body == 'all'){
-							// Return all students
-						}
-						else{
-							// Return student with specified id
-						}
-						*/
-						console.log("get happening");
 						controller.GEThandler(incoming);
 						break;
 					case 'PUT':
+						controller.PUThandler(incoming);
 						break;
 					case 'POST':
+						controller.POSThandler(incoming);
 						break;
 					case 'DELETE':
+						controller.DELETEhandler(incoming);
 						break;
 				}
 
