@@ -24,6 +24,19 @@ var sqs = new aws.SQS({
 			}
 		});
 
+/*
+// Config for Dynamo
+aws.config.update({
+			region: config.aws.region,
+			accessKeyId: config.aws.accessID,
+			secretAccessKey: config.aws.secretKey,
+		});
+var dynamodbDoc = new aws.DynamoDB.DocumentClient();
+var table = "micro"; // Dynamo Table name entered here
+*/
+
+
+
 var receiveMessage =  Q.nbind( sqs.receiveMessage, sqs ) ;
 var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 
@@ -72,27 +85,34 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 
 		        }
 
-
-
-
-
-
-
-
-		        // --- TODO
-		        //  PROCESS MESSAGE - GET/PUT/POST/DELETE DYNAMO Service
-		        // ---
-
 				var incoming = JSON.parse(data.Messages[ 0 ].Body);
-				var controller = require("./controller")
+				var controller = require("./controller");
 				//controller.echoMessage(incoming);
 
 
-				if (incoming.Header.OP.toUpperCase() == 'GET') {
-					console.log("get happening");
-					controller.GEThandler(incoming);
-					// To Do: Get from DynamoDB
+				//  PROCESS MESSAGE - GET/PUT/POST/DELETE DYNAMO Service
+				// DYNAMODB implementation:
+				switch(incoming.Header.OP.toUpperCase()){
+					case 'GET':
+					/*
+						if(incoming.Header.body == 'all'){
+							// Return all students
+						}
+						else{
+							// Return student with specified id
+						}
+						*/
+						console.log("get happening");
+						controller.GEThandler(incoming);
+						break;
+					case 'PUT':
+						break;
+					case 'POST':
+						break;
+					case 'DELETE':
+						break;
 				}
+
 
 
 
