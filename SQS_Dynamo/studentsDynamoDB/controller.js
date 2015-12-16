@@ -4,6 +4,14 @@ var Q = require( "q" );
 var chalk = require( "chalk" );
 var config = require( "../config.json" );
 
+aws.config.update({
+			region: config.aws.region,
+			accessKeyId: config.aws.accessID,
+			secretAccessKey: config.aws.secretKey,
+		});
+var dynamodbDoc = new aws.DynamoDB.DocumentClient();
+var table = "micro";
+
 exports.echoMessage = function (incoming){
 
 		console.log("\nfunction controller.echoMessage(incoming):");
@@ -22,21 +30,48 @@ exports.echoMessage = function (incoming){
 
 exports.GEThandler = function (incoming){
 
-var response = {}
-var header = {}
-var studentInfo = {}
+	var response = {};
+	var header = {};
+	var message = {};
 
-studentInfo['name'] = 'Jonathan';
+	header['CID'] = incoming.Header.CID;
+	response['Header'] = header;
 
-//header['OP'] = clientQs[clientNames[ind]].Req.Header.OP;
-//header['ResQ'] = config.aws.queueUrl+Qin;
-//header['ID'] = clientQs[clientNames[ind]].Req.Header.ID;
-header['CID'] = incoming.Header.CID;
-response['Header'] = header;
-response['Body'] = studentInfo;
+	var params = {
+	    TableName : table,
+	    KeyConditionExpression: "#key = :value",
+	    ExpressionAttributeNames:{
+	        "#key": "id"
+	    },
+	    ExpressionAttributeValues: {
+	        ":value":incoming.Body.ID
+	    }
+	};
 
-	// echo the same message back to the client
-	ResponseMessageTo(incoming.Header.ResQ, response)
+	dynamodbDoc.query(params, function(err, data) {
+	    if (err) {
+	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+					message['message'] = JSON.stringify(err, null, 2);
+					response['Body'] = message;
+					ResponseMessageTo(incoming.Header.ResQ, response)
+	    } else {
+	        console.log("Query succeeded.");
+					message['message'] = JSON.stringify(data);
+					response['Body'] = message;
+					ResponseMessageTo(incoming.Header.ResQ, response)
+	    }
+	});
+		// echo the same message back to the client
+	//ResponseMessageTo(incoming.Header.ResQ, response)
+}
+
+exports.POSThandler = function (incoming){
+}
+
+exports.PUThandler = function (incoming){
+}
+
+exports.DELETEhandler = function (incoming){
 }
 
 
