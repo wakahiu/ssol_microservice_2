@@ -22,8 +22,7 @@ exports.echoMessage = function (incoming){
 		console.log("\t"+incoming.Header.ID)
 		console.log("\t"+incoming.Header.CID)
 		console.log("\t"+incoming.Body)
-
-
+		
 	// echo the same message back to the client
 	ResponseMessageTo(incoming.Header.ResQ, incoming)
 }
@@ -53,12 +52,12 @@ exports.GEThandler = function (incoming){
 	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
 					message['message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
-					ResponseMessageTo(incoming.Header.ResQ, response)
+					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
 	        console.log("Query succeeded.");
 					message['message'] = JSON.stringify(data);
 					response['Body'] = message;
-					ResponseMessageTo(incoming.Header.ResQ, response)
+					ResponseMessageTo(incoming.Header.ResQ, response);
 	    }
 	});
 		// echo the same message back to the client
@@ -66,6 +65,34 @@ exports.GEThandler = function (incoming){
 }
 
 exports.POSThandler = function (incoming){
+
+	var response = {};
+	var header = {};
+	var message = {};
+
+	header['CID'] = incoming.Header.CID;
+	response['Header'] = header;
+
+	var params = {
+	    TableName:table,
+	    Item:incoming.Body
+	};
+
+	console.log("Adding a new item...");
+	dynamodbDoc.put(params, function(err, data) {
+	    if (err) {
+	        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+					message['message'] = JSON.stringify(err, null, 2);
+					response['Body'] = message;
+					ResponseMessageTo(incoming.Header.ResQ, response);
+	    } else {
+	        console.log("Added item:", JSON.stringify(data, null, 2));
+					message['message'] = 'Student successfully added';
+					response['Body'] = message;
+					ResponseMessageTo(incoming.Header.ResQ, response);
+	    }
+	});
+
 }
 
 exports.PUThandler = function (incoming){
