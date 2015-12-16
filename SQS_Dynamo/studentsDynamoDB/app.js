@@ -24,19 +24,6 @@ var sqs = new aws.SQS({
 			}
 		});
 
-/*
-// Config for Dynamo
-aws.config.update({
-			region: config.aws.region,
-			accessKeyId: config.aws.accessID,
-			secretAccessKey: config.aws.secretKey,
-		});
-var dynamodbDoc = new aws.DynamoDB.DocumentClient();
-var table = "micro"; // Dynamo Table name entered here
-*/
-
-
-
 var receiveMessage =  Q.nbind( sqs.receiveMessage, sqs ) ;
 var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 
@@ -106,13 +93,6 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 						controller.DELETEhandler(incoming);
 						break;
 				}
-
-
-
-
-
-
-
 
 
 		        // Now that we've processed the message, we need to tell SQS to delete the

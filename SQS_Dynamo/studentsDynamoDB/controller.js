@@ -22,7 +22,7 @@ exports.echoMessage = function (incoming){
 		console.log("\t"+incoming.Header.ID)
 		console.log("\t"+incoming.Header.CID)
 		console.log("\t"+incoming.Body)
-		
+
 	// echo the same message back to the client
 	ResponseMessageTo(incoming.Header.ResQ, incoming)
 }
@@ -99,6 +99,35 @@ exports.PUThandler = function (incoming){
 }
 
 exports.DELETEhandler = function (incoming){
+
+	var response = {};
+	var header = {};
+	var message = {};
+
+	header['CID'] = incoming.Header.CID;
+	response['Header'] = header;
+
+	var params = {
+	    TableName:table,
+	    Key:{
+	        "id":incoming.Body.ID
+	    }
+	};
+
+	console.log("Attempting a delete...");
+	dynamodbDoc.delete(params, function(err, data) {
+	    if (err) {
+	        console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+					message['message'] = JSON.stringify(err, null, 2);
+					response['Body'] = message;
+					ResponseMessageTo(incoming.Header.ResQ, response);
+	    } else {
+	        console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
+					message['message'] = 'Student successfully deleted';
+					response['Body'] = message;
+					ResponseMessageTo(incoming.Header.ResQ, response);
+	    }
+	});
 }
 
 

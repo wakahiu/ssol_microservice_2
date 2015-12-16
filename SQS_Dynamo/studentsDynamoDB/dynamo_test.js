@@ -61,3 +61,20 @@ dynamodbDoc.query(params, function(err, data) {
         });
     }
 });
+
+// Delete an item:
+var params = {
+    TableName:table,
+    Key:{
+        "id":"jc4267"
+    }
+};
+
+console.log("Attempting a delete...");
+dynamodbDoc.delete(params, function(err, data) {
+    if (err) {
+        console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+    } else {
+        console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
+    }
+});
