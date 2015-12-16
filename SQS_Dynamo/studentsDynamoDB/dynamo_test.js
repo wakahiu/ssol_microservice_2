@@ -9,13 +9,6 @@ aws.config.update({
 			region: config.aws.region,
 			accessKeyId: config.aws.accessID,
 			secretAccessKey: config.aws.secretKey,
-
-			// For every request in this demo, I'm going to be using the same QueueUrl; so,
-			// rather than explicitly defining it on every request, I can set it here as the
-			// default QueueUrl to be automatically appended to every request.
-			//params: {
-				//QueueUrl: config.aws.queueUrl+K12_inQ
-			//}
 		});
 
 
@@ -23,14 +16,14 @@ aws.config.update({
 
 var dynamodbDoc = new aws.DynamoDB.DocumentClient();
 
-var table = "music";
+var table = "micro";
 
-var title = "The Big New Movie";
+var sample_id = "jc4267";
 
 var params = {
     TableName:table,
     Item:{
-        "artist": title
+        "id": sample_id
     }
 };
 

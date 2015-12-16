@@ -19,7 +19,7 @@ process.argv.forEach(function (val, index, array) {
 
 // make sure the client exists in the config file
 var clientNames = Object.keys(config.clients);
-var ind = clientNames.indexOf(clientID); 
+var ind = clientNames.indexOf(clientID);
 if (ind < 0) throw(new Error(clientID+" not defined in config.json"));
 
 // print out client and Qout to console
@@ -53,7 +53,7 @@ rl.question("PRESS ENTER TO SEND THE MESSAGE: ", function(answer) {
 		header['OP'] = clientQs[clientNames[ind]].Req.Header.OP;
 		header['ResQ'] = config.aws.queueUrl+Qin;
 		header['ID'] = clientQs[clientNames[ind]].Req.Header.ID;
-		header['CID'] = uuid.v4(); 
+		header['CID'] = uuid.v4();
 		message['Header'] = header;
 		message['Body'] = clientQs[clientNames[ind]].Req.Body;
 
@@ -145,7 +145,7 @@ rl.question("PRESS ENTER TO SEND THE MESSAGE: ", function(answer) {
 							}
 
 
-							// --- 
+							// ---
 							//  PROCESS Response - Print to Console
 							// ---
 							console.log( "\n" + chalk.green( "Response..."));//, data.MessageId ) +"\n");
@@ -243,6 +243,3 @@ rl.question("PRESS ENTER TO SEND THE MESSAGE: ", function(answer) {
 
   rl.close();
 });
-
-
-
