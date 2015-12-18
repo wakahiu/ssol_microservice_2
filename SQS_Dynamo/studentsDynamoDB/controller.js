@@ -87,29 +87,82 @@ exports.POSThandler = function (incoming){
 	response['Header'] = header;
 
 	var params = {
-	    TableName:table,
-	    Item:incoming.Body
+	    TableName : table,
+	    Item : incoming.Body
 	};
 
-	console.log("Adding a new item...");
-	dynamodbDoc.put(params, function(err, data) {
+	if (incoming.Body.id == undefined) {
+		message['message'] = 'Bad Request: undefined id';
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	} else if (incoming.Body.firstname == undefined) {
+		message['message'] = 'Bad Request: undefined firstname';
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	} else if (incoming.Body.lastname == undefined) {
+		message['message'] = 'Bad Request: undefined lastname';
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	}
+
+	console.log(incoming.Body == {});
+	console.log(params);
+
+	var queryParams = {
+	    TableName : table,
+	    KeyConditionExpression: "#key = :value",
+	    ExpressionAttributeNames:{
+	        "#key": "id"
+	    },
+	    ExpressionAttributeValues: {
+	        ":value":incoming.Body.id
+	    }
+	};
+
+	dynamodbDoc.query(queryParams, function(err, data) {
 	    if (err) {
-	        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
 					message['message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
-
-					//response['Code'] = '400 Bad Request';
 					response['Code'] = '500 Internal Server Error';
-
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
-	        console.log("Added item:", JSON.stringify(data, null, 2));
-					message['message'] = 'Student successfully added';
-					response['Body'] = message;
-					ResponseMessageTo(incoming.Header.ResQ, response);
+	    	if(data.Count == 0) {
+		        dynamodbDoc.put(params, function(err, dataToPut) {
+				    if (err) {
+				        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
+								message['message'] = JSON.stringify(err, null, 2);
+								response['Body'] = message;
+
+								//response['Code'] = '400 Bad Request';
+								response['Code'] = '500 Internal Server Error';
+
+								ResponseMessageTo(incoming.Header.ResQ, response);
+				    } else {
+				        console.log("Added item:", JSON.stringify(dataToPut, null, 2));
+								message['message'] = 'Student successfully added';
+								response['Body'] = message;
+								ResponseMessageTo(incoming.Header.ResQ, response);
+				    }
+				});
+		    } else {
+				message['message'] = "Bad Request: Studend with id " + incoming.Body.id + " already exists";
+				response['Body'] = message;
+
+				//response['Code'] = '400 Bad Request';
+				response['Code'] = '400';
+
+				ResponseMessageTo(incoming.Header.ResQ, response);
+		    }
 	    }
 	});
-
+	console.log("Adding a new item...");
 }
 
 exports.PUThandler = function (incoming){
