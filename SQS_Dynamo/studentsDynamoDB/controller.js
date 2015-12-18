@@ -43,20 +43,33 @@ exports.GEThandler = function (incoming){
 	        "#key": "id"
 	    },
 	    ExpressionAttributeValues: {
-	        ":value":incoming.Body.ID
+	        ":value":incoming.Body.id
 	    }
 	};
+
+	console.log("troubleshoot body id: " + incoming.Body.id)
 
 	dynamodbDoc.query(params, function(err, data) {
 	    if (err) {
 	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
 					message['message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
+					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
 	        console.log("Query succeeded.");
 					message['message'] = JSON.stringify(data);
 					response['Body'] = message;
+
+					if(data.Count == 0) {
+						console.log("Troubleshoot: Item not found!")
+						response['Code'] = '404 Not Found';
+					}
+
+					else {
+						response['Code'] = '200 OK';
+					}
+
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    }
 	});
