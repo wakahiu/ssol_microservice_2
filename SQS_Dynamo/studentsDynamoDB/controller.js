@@ -27,6 +27,7 @@ exports.echoMessage = function (incoming){
 	ResponseMessageTo(incoming.Header.ResQ, incoming)
 }
 
+// TODO: (Peter) Scan all if ID not specified?
 exports.GEThandler = function (incoming){
 
 	var response = {};
@@ -52,22 +53,26 @@ exports.GEThandler = function (incoming){
 	dynamodbDoc.query(params, function(err, data) {
 	    if (err) {
 	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
-					message['message'] = JSON.stringify(err, null, 2);
+					message['Message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
 					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
 	        console.log("Query succeeded.");
-					message['message'] = JSON.stringify(data);
-					response['Body'] = message;
-
+	        		var returnObj = data;
 					if(data.Count == 0) {
-						console.log("Troubleshoot: Item not found!")
-						response['Code'] = '404 Not Found';
+						console.log("Troubleshoot: Item not found!");
+						returnObj.Message = "Not Found: Item not found!";
+						message = JSON.stringify(returnObj);
+						response['Body'] = message;
+						response['Code'] = '404';
 					}
 
 					else {
-						response['Code'] = '200 OK';
+						returnObj.Message = "OK: Found " + data.Items.length + " Items";
+						message = JSON.stringify(returnObj);
+						response['Body'] = message;
+						response['Code'] = '200';
 					}
 
 					ResponseMessageTo(incoming.Header.ResQ, response);
@@ -92,24 +97,26 @@ exports.POSThandler = function (incoming){
 	};
 
 	if (incoming.Body.id == undefined) {
-		message['message'] = 'Bad Request: undefined id';
+		message['Message'] = 'Bad Request: undefined id';
 		response['Body'] = message;
 		response['Code'] = '400';
 		ResponseMessageTo(incoming.Header.ResQ, response);
 		return;
 	} else if (incoming.Body.firstname == undefined) {
-		message['message'] = 'Bad Request: undefined firstname';
+		message['Message'] = 'Bad Request: undefined firstname';
 		response['Body'] = message;
 		response['Code'] = '400';
 		ResponseMessageTo(incoming.Header.ResQ, response);
 		return;
 	} else if (incoming.Body.lastname == undefined) {
-		message['message'] = 'Bad Request: undefined lastname';
+		message['Message'] = 'Bad Request: undefined lastname';
 		response['Body'] = message;
 		response['Code'] = '400';
 		ResponseMessageTo(incoming.Header.ResQ, response);
 		return;
 	}
+
+	console.log(Object.keys(incoming.Body));
 
 	console.log(incoming.Body == {});
 	console.log(params);
@@ -128,7 +135,7 @@ exports.POSThandler = function (incoming){
 	dynamodbDoc.query(queryParams, function(err, data) {
 	    if (err) {
 	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
-					message['message'] = JSON.stringify(err, null, 2);
+					message['Message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
 					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
@@ -137,7 +144,7 @@ exports.POSThandler = function (incoming){
 		        dynamodbDoc.put(params, function(err, dataToPut) {
 				    if (err) {
 				        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-								message['message'] = JSON.stringify(err, null, 2);
+								message['Message'] = JSON.stringify(err, null, 2);
 								response['Body'] = message;
 
 								//response['Code'] = '400 Bad Request';
@@ -145,14 +152,17 @@ exports.POSThandler = function (incoming){
 
 								ResponseMessageTo(incoming.Header.ResQ, response);
 				    } else {
-				        console.log("Added item:", JSON.stringify(dataToPut, null, 2));
-								message['message'] = 'Student successfully added';
-								response['Body'] = message;
-								ResponseMessageTo(incoming.Header.ResQ, response);
+				    		var returnObj = incoming.Body;
+			        		console.log("Added item:", JSON.stringify(dataToPut, null, 2));
+							returnObj.Message = "OK: Student successfully added";
+							message = JSON.stringify(returnObj);
+							response['Body'] = message;
+							response['Code'] = '200';
+							ResponseMessageTo(incoming.Header.ResQ, response);
 				    }
 				});
 		    } else {
-				message['message'] = "Bad Request: Studend with id " + incoming.Body.id + " already exists";
+				message['Message'] = "Bad Request: Student with id " + incoming.Body.id + " already exists";
 				response['Body'] = message;
 
 				//response['Code'] = '400 Bad Request';
@@ -165,6 +175,7 @@ exports.POSThandler = function (incoming){
 	console.log("Adding a new item...");
 }
 
+// TODO: Should entries be updated one at a time. (Jivtesh ask T.A.)
 exports.PUThandler = function (incoming){
 	var response = {};
 	var header = {};
@@ -178,20 +189,62 @@ exports.PUThandler = function (incoming){
 			Item:incoming.Body
 	};
 
-	console.log("Adding a new item...");
-	dynamodbDoc.put(params, function(err, data) {
-			if (err) {
-					console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
-					message['message'] = JSON.stringify(err, null, 2);
+	if (incoming.Body.id == undefined) {
+		message['Message'] = 'Bad Request: undefined id';
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	}
+
+	var queryParams = {
+	    TableName : table,
+	    KeyConditionExpression: "#key = :value",
+	    ExpressionAttributeNames:{
+	        "#key": "id"
+	    },
+	    ExpressionAttributeValues: {
+	        ":value":incoming.Body.id
+	    }
+	};
+
+	dynamodbDoc.query(queryParams, function(err, data) {
+	    if (err) {
+	        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+					message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
 					response['Body'] = message;
-					response['Code'] = '500 Internal Server Error';
+					response['Code'] = '500';
 					ResponseMessageTo(incoming.Header.ResQ, response);
-			} else {
-					console.log("Added item:", JSON.stringify(data, null, 2));
-					message['message'] = 'Student successfully added';
-					response['Body'] = message;
-					ResponseMessageTo(incoming.Header.ResQ, response);
-			}
+	    } else {
+	    	if(data.Count == 1) {
+	    		console.log("Adding a new item...");
+		        dynamodbDoc.put(params, function(err, dataToPut) {
+				    if (err) {
+				        console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+								message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
+								response['Body'] = message;
+								response['Code'] = '500';
+
+								ResponseMessageTo(incoming.Header.ResQ, response);
+				    } else {
+
+				        console.log("Added item:", JSON.stringify(dataToPut, null, 2));
+								message['Message'] = 'OK: Student successfully updated';
+								response['Body'] = message;
+								response['Code'] = '200';
+								ResponseMessageTo(incoming.Header.ResQ, response);
+				    }
+				});
+		    } else {
+				message['Message'] = "Bad Request: Student with id " + incoming.Body.id + " not found";
+				response['Body'] = message;
+
+				//response['Code'] = '400 Bad Request';
+				response['Code'] = '400';
+
+				ResponseMessageTo(incoming.Header.ResQ, response);
+		    }
+	    }
 	});
 }
 
@@ -211,17 +264,25 @@ exports.DELETEhandler = function (incoming){
 	    }
 	};
 
+	if (incoming.Body.id == undefined) {
+		message['Message'] = 'Bad Request: undefined id';
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	}
+
 	console.log("Attempting a delete...");
 	dynamodbDoc.delete(params, function(err, data) {
 	    if (err) {
 	        console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
-					message['message'] = JSON.stringify(err, null, 2);
+					message['Message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
 					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
 	        console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
-					message['message'] = 'Student successfully deleted';
+					message['Message'] = 'Student successfully deleted';
 					response['Body'] = message;
 					response['Code'] = '200 OK';
 					ResponseMessageTo(incoming.Header.ResQ, response);
