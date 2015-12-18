@@ -97,6 +97,7 @@ exports.POSThandler = function (incoming){
 	        console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
 					message['message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
+					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
 	        console.log("Added item:", JSON.stringify(data, null, 2));
@@ -127,6 +128,7 @@ exports.PUThandler = function (incoming){
 					console.error("Unable to add item. Error JSON:", JSON.stringify(err, null, 2));
 					message['message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
+					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 			} else {
 					console.log("Added item:", JSON.stringify(data, null, 2));
@@ -159,6 +161,7 @@ exports.DELETEhandler = function (incoming){
 	        console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
 					message['message'] = JSON.stringify(err, null, 2);
 					response['Body'] = message;
+					response['Code'] = '500 Internal Server Error';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    } else {
 	        console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
