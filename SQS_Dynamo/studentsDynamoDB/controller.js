@@ -151,7 +151,7 @@ exports.DELETEhandler = function (incoming){
 	var params = {
 	    TableName:table,
 	    Key:{
-	        "id":incoming.Body.ID
+	        "id":incoming.Body.id
 	    }
 	};
 
@@ -167,6 +167,7 @@ exports.DELETEhandler = function (incoming){
 	        console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
 					message['message'] = 'Student successfully deleted';
 					response['Body'] = message;
+					response['Code'] = '200 OK';
 					ResponseMessageTo(incoming.Header.ResQ, response);
 	    }
 	});
