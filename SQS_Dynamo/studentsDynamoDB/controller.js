@@ -543,6 +543,7 @@ exports.PUThandler = function (incoming){
 							var valid = true;
 							var schema = data.Items[0].attributes.values;
 							var param_keys = Object.keys(incoming.Body);
+							console.log(item);
 
 							_(param_keys).forEach(function(key) {
 								if (_.indexOf(schema, key) == -1) {
@@ -550,7 +551,7 @@ exports.PUThandler = function (incoming){
 									console.log(schema);
 									valid = false;
 								} else {
-									item[key].values = incoming.Body[key];
+									item[key] = incoming.Body[key];
 								}
 							});
 
@@ -572,7 +573,7 @@ exports.PUThandler = function (incoming){
 							dynamodbDoc.put(params, function(err, dataToPut) {
 								if (err) {
 									console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
-									message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
+									message = "Internal Server Error: " + JSON.stringify(err, null, 2);
 									response['Body'] = message;
 									response['Code'] = '500';
 
@@ -580,7 +581,7 @@ exports.PUThandler = function (incoming){
 								} else {
 
 									console.log("Added item:", JSON.stringify(dataToPut, null, 2));
-									message['Message'] = 'OK: Student successfully updated';
+									message = 'OK: Student successfully updated';
 									response['Body'] = message;
 									response['Code'] = '200';
 									ResponseMessageTo(incoming.Header.ResQ, response);
@@ -736,20 +737,59 @@ var deleteStudent = function (incoming){
 		return;
 	}
 
-	console.log("Attempting a delete...");
-	dynamodbDoc.delete(params, function(err, data) {
+	var queryParams = {
+		TableName : table,
+		KeyConditionExpression: "#key = :value",
+		ExpressionAttributeNames:{
+			"#key": "id"
+		},
+		ExpressionAttributeValues: {
+			":value":incoming.Body.id
+		}
+	};
+
+	dynamodbDoc.query(queryParams, function(err, data) {
 		if (err) {
-			console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
-			message['Message'] = JSON.stringify(err, null, 2);
+			console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+			message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
 			response['Body'] = message;
-			response['Code'] = '500 Internal Server Error';
+			response['Code'] = '500';
 			ResponseMessageTo(incoming.Header.ResQ, response);
 		} else {
-			console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
-			message['Message'] = 'Student successfully deleted';
-			response['Body'] = message;
-			response['Code'] = '202';
-			ResponseMessageTo(incoming.Header.ResQ, response);
+			if(data.Count == 1) {
+
+				var params = {
+					TableName:table,
+					Key:{
+						"id":incoming.Body.id
+					}
+				};
+
+				console.log("Attempting a delete...");
+				dynamodbDoc.delete(params, function(err, data) {
+					if (err) {
+						console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+						message['Message'] = JSON.stringify(err, null, 2);
+						response['Body'] = message;
+						response['Code'] = '500 Internal Server Error';
+						ResponseMessageTo(incoming.Header.ResQ, response);
+					} else {
+						console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
+						message['Message'] = 'Student successfully deleted';
+						response['Body'] = message;
+						response['Code'] = '202';
+						ResponseMessageTo(incoming.Header.ResQ, response);
+					}
+				});
+			} else {
+				message['Message'] = "Bad Request: Student with id " + incoming.Body.id + " not found";
+				response['Body'] = message;
+
+				//response['Code'] = '400 Bad Request';
+				response['Code'] = '400';
+
+				ResponseMessageTo(incoming.Header.ResQ, response);
+			}
 		}
 	});
 }
