@@ -405,22 +405,75 @@ exports.PUThandler = function (incoming){
 			ResponseMessageTo(incoming.Header.ResQ, response);
 		} else {
 			if(data.Count == 1) {
-				console.log("Adding a new item...");
-				dynamodbDoc.put(params, function(err, dataToPut) {
+
+				var schema_params = {
+					TableName : schema_table,
+					KeyConditionExpression: "#key = :value",
+					ExpressionAttributeNames:{
+						"#key": "table_name"
+					},
+					ExpressionAttributeValues: {
+						":value":"micro"
+					}
+				};
+
+				// Fetch schema first
+				dynamodbDoc.query(schema_params, function(err, data) {
 					if (err) {
-						console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
-						message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
+						console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+						message = "Internal Server Error: " + JSON.stringify(err, null, 2);
 						response['Body'] = message;
 						response['Code'] = '500';
-
 						ResponseMessageTo(incoming.Header.ResQ, response);
 					} else {
+						console.log("Schema query succeeded.");
+						if (data.Count == 0) {
+							console.log("Troubleshoot: Schema not found!");
+							var message = "Internal server error";
+							response['Body'] = message;
+							response['Code'] = '500';
+						} else {
 
-						console.log("Added item:", JSON.stringify(dataToPut, null, 2));
-						message['Message'] = 'OK: Student successfully updated';
-						response['Body'] = message;
-						response['Code'] = '200';
-						ResponseMessageTo(incoming.Header.ResQ, response);
+							//Check if any attribute specified not part of schema
+							var valid = true;
+							var schema = data.Items[0].attributes.values;
+							var param_keys = Object.keys(incoming.Body);
+							
+							_(param_keys).forEach(function(key) {
+								if (_.indexOf(schema, key) == -1) {
+									console.log(key);
+									console.log(schema);
+									valid = false;
+								}
+							});
+
+							if (!valid) {
+								message = 'Bad Request: invalid attribute included';
+								response['Body'] = message;
+								response['Code'] = '400';
+								ResponseMessageTo(incoming.Header.ResQ, response);
+								return;
+							} 
+
+							console.log("Updating a new item...");
+							dynamodbDoc.put(params, function(err, dataToPut) {
+								if (err) {
+									console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+									message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
+									response['Body'] = message;
+									response['Code'] = '500';
+
+									ResponseMessageTo(incoming.Header.ResQ, response);
+								} else {
+
+									console.log("Added item:", JSON.stringify(dataToPut, null, 2));
+									message['Message'] = 'OK: Student successfully updated';
+									response['Body'] = message;
+									response['Code'] = '200';
+									ResponseMessageTo(incoming.Header.ResQ, response);
+								}
+							});
+						}
 					}
 				});
 			} else {
