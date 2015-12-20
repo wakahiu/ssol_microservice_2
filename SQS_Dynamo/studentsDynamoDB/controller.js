@@ -130,6 +130,7 @@ exports.GEThandler = function (incoming) {
 					var expression = "";
 					var attribute_names = {};
 					var attribute_values = {};
+					var valid = true;
 
 					//construct query
 					for (var i = 0; i < query_fields.length; i++)  {
@@ -142,12 +143,24 @@ exports.GEThandler = function (incoming) {
 							attribute_values[value] = incoming.Body[query_fields[i]];
 						}
 
+						if (_.indexOf(schema, query_fields[i]) == -1) {
+							valid = false;
+						}
+
 						//construct expression
 						expression += name + " = " +  value;
 
 						//if not last element
 						if (i < query_fields.length - 1) 
 							expression += " AND ";
+					}
+
+					if (!valid) {
+						message = "Bad Request: Invalid query parameter";
+						response['Body'] = message;
+						response['Code'] = '400';
+						ResponseMessageTo(incoming.Header.ResQ, response);
+						return;
 					}
 
 					var params = {
