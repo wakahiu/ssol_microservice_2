@@ -51,6 +51,7 @@ rl.question("PRESS ENTER TO SEND THE MESSAGE: ", function(answer) {
 		var header = {};
 
 		header['OP'] = clientQs[clientNames[ind]].Req.Header.OP;
+		header['SCHEMA_ACTION'] = clientQs[clientNames[ind]].Req.Header.SCHEMA_ACTION;
 		header['ResQ'] = config.aws.queueUrl+Qin;
 		header['ID'] = clientQs[clientNames[ind]].Req.Header.ID;
 		header['CID'] = uuid.v4();

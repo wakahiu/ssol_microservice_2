@@ -58,7 +58,7 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 		.then(
 		    function handleMessageResolve( data ) {
 
-		        // If there are no message, throw an error so that we can bypass the
+		        // If there are no messages, throw an error so that we can bypass the
 		        // subsequent resolution handler that is expecting to have a message
 		        // delete confirmation.
 		        if ( ! data.Messages ) {
@@ -137,7 +137,7 @@ var deleteMessage = Q.nbind( sqs.deleteMessage, sqs ) ;
 		)
 
 		// When the promise chain completes, either in success of in error, let's kick the
-		// long-poll operation back up and look for moar messages.
+		// long-poll operation back up and look for more messages.
 		.finally( pollQueueForMessages );
 
 	})();
