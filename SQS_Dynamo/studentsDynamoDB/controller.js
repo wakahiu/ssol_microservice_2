@@ -99,9 +99,19 @@ exports.GEThandler = function (incoming) {
 							} else {
 								var items = data.Items;
 								_(items).forEach(function(item) {
+
+									// Add schema fields that do not exist
 									_(schema).forEach(function(key) {
 										if (item[key] == undefined) {
 											item[key] = null;
+										}
+									});
+
+									// Remove outdated attributes not in schema
+									var attributes = Object.keys(item);
+									_(attributes).forEach(function(attribute) {
+										if (_.indexOf(schema, attribute) == -1) {
+											delete item[attribute];
 										}
 									});
 								});
@@ -172,9 +182,19 @@ exports.GEThandler = function (incoming) {
 							else {
 								var items = data.Items;
 								_(items).forEach(function(item) {
+
+									// Add schema fields that do not exist
 									_(schema).forEach(function(key) {
 										if (item[key] == undefined) {
 											item[key] = null;
+										}
+									});
+
+									// Remove outdated attributes not in schema
+									var attributes = Object.keys(item);
+									_(attributes).forEach(function(attribute) {
+										if (_.indexOf(schema, attribute) == -1) {
+											delete item[attribute];
 										}
 									});
 								});
@@ -215,6 +235,82 @@ exports.POSThandler = function(incoming) {
 }
 
 var addAttribute = function(incoming) {
+	var response = {};
+	var header = {};
+	var message = {};
+
+	header['CID'] = incoming.Header.CID;
+	response['Header'] = header;
+
+	var attribute = incoming.Body.attribute;
+	if (attribute == undefined) {
+		message = "Bad Request: undefined body field \'attribute\'";
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	}
+
+	var schema_params = {
+		TableName : schema_table,
+		KeyConditionExpression: "#key = :value",
+		ExpressionAttributeNames:{
+			"#key": "table_name"
+		},
+		ExpressionAttributeValues: {
+			":value":"micro"
+		}
+	};
+
+	dynamodbDoc.query(schema_params, function(err, data) {
+		if (err) {
+			console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+			message = JSON.stringify(err, null, 2);
+			response['Body'] = message;
+			response['Code'] = '500 Internal Server Error';
+			ResponseMessageTo(incoming.Header.ResQ, response);
+		} else {
+			console.log("Schema query succeeded.");
+			if (data.Count == 0) {
+				console.log("Troubleshoot: Schema not found!");
+				var message = "Internal server error";
+				response['Body'] = message;
+				response['Code'] = '500';
+			} else {
+				var schema = data.Items[0].attributes.values;
+				if (_.indexOf(schema, attribute) >= 0) {
+					message = "Bad Request: Attribute specified already exists";
+					response['Body'] = message;
+					response['Code'] = '400';
+					ResponseMessageTo(incoming.Header.ResQ, response);
+					return;
+				} else {
+					data.Items[0].attributes.values.push(attribute);
+					var params = {
+						TableName: schema_table,
+						Item: data.Items[0]
+					};
+					dynamodbDoc.put(params, function(err, dataToPut) {
+						if (err) {
+							console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+							message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
+							response['Body'] = message;
+							response['Code'] = '500';
+
+							ResponseMessageTo(incoming.Header.ResQ, response);
+						} else {
+							console.log("Added item:", JSON.stringify(dataToPut, null, 2));
+							message = 'OK: Schema attribute succesfully created';
+							response['Body'] = message;
+							response['Code'] = '201';
+							ResponseMessageTo(incoming.Header.ResQ, response);
+						}
+
+					});
+				}
+			}
+		}
+	}); 
 
 }
 
@@ -360,7 +456,8 @@ var createStudent = function (incoming){
 			}
 		}
 	});
-console.log("Adding a new item...");
+	
+	console.log("Adding a new item...");
 }
 
 // TODO: Should entries be updated one at a time. (Jivtesh ask T.A.)
@@ -456,7 +553,94 @@ exports.DELETEhandler = function(incoming) {
 };
 
 var deleteAttribute = function(incoming) {
+	var response = {};
+	var header = {};
+	var message = {};
 
+	header['CID'] = incoming.Header.CID;
+	response['Header'] = header;
+
+	var attribute = incoming.Body.attribute;
+	if (attribute == undefined) {
+		message = "Bad Request: undefined body field \'attribute\'";
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	}
+
+	// Cannot delete firstname, lastname, id
+	if (attribute == 'id' || 
+		attribute == 'firstname' || 
+		attribute == 'lastname') {
+		message = "Bad Request: Attribute specified cannot be removed";
+		response['Body'] = message;
+		response['Code'] = '400';
+		ResponseMessageTo(incoming.Header.ResQ, response);
+		return;
+	}
+
+	var schema_params = {
+		TableName : schema_table,
+		KeyConditionExpression: "#key = :value",
+		ExpressionAttributeNames:{
+			"#key": "table_name"
+		},
+		ExpressionAttributeValues: {
+			":value":"micro"
+		}
+	};
+
+	dynamodbDoc.query(schema_params, function(err, data) {
+		if (err) {
+			console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+			message = JSON.stringify(err, null, 2);
+			response['Body'] = message;
+			response['Code'] = '500 Internal Server Error';
+			ResponseMessageTo(incoming.Header.ResQ, response);
+		} else {
+			console.log("Schema query succeeded.");
+			if (data.Count == 0) {
+				console.log("Troubleshoot: Schema not found!");
+				var message = "Internal server error";
+				response['Body'] = message;
+				response['Code'] = '500';
+			} else {
+				var schema = data.Items[0].attributes.values;
+				if (_.indexOf(schema, attribute) == -1) {
+					message = "Bad Request: Attribute specified does not exist";
+					response['Body'] = message;
+					response['Code'] = '400';
+					ResponseMessageTo(incoming.Header.ResQ, response);
+					return;
+				} else {
+					var update = _.without(data.Items[0].attributes.values, attribute);
+					data.Items[0].attributes.values = update;
+					var params = {
+						TableName: schema_table,
+						Item: data.Items[0]
+					};
+					dynamodbDoc.put(params, function(err, dataToPut) {
+						if (err) {
+							console.error("Unable to update item. Error JSON:", JSON.stringify(err, null, 2));
+							message['Message'] = "Internal Server Error: " + JSON.stringify(err, null, 2);
+							response['Body'] = message;
+							response['Code'] = '500';
+
+							ResponseMessageTo(incoming.Header.ResQ, response);
+						} else {
+							console.log("Added item:", JSON.stringify(dataToPut, null, 2));
+							message = 'OK: Schema attribute succesfully removed';
+							response['Body'] = message;
+							response['Code'] = '202';
+							ResponseMessageTo(incoming.Header.ResQ, response);
+						}
+
+					});
+				}
+			}
+		}
+	}); 
 };
 
 var deleteStudent = function (incoming){
@@ -495,7 +679,7 @@ var deleteStudent = function (incoming){
 			console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
 			message['Message'] = 'Student successfully deleted';
 			response['Body'] = message;
-			response['Code'] = '200 OK';
+			response['Code'] = '202';
 			ResponseMessageTo(incoming.Header.ResQ, response);
 		}
 	});
