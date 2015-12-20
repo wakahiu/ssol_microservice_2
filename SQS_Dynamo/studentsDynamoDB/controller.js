@@ -482,11 +482,6 @@ exports.PUThandler = function (incoming){
 	header['CID'] = incoming.Header.CID;
 	response['Header'] = header;
 
-	var params = {
-		TableName:table,
-		Item:incoming.Body
-	};
-
 	if (incoming.Body.id == undefined) {
 		message['Message'] = 'Bad Request: undefined id';
 		response['Body'] = message;
@@ -515,7 +510,7 @@ exports.PUThandler = function (incoming){
 			ResponseMessageTo(incoming.Header.ResQ, response);
 		} else {
 			if(data.Count == 1) {
-
+				var item = data.Items[0];
 				var schema_params = {
 					TableName : schema_table,
 					KeyConditionExpression: "#key = :value",
@@ -548,12 +543,14 @@ exports.PUThandler = function (incoming){
 							var valid = true;
 							var schema = data.Items[0].attributes.values;
 							var param_keys = Object.keys(incoming.Body);
-							
+
 							_(param_keys).forEach(function(key) {
 								if (_.indexOf(schema, key) == -1) {
 									console.log(key);
 									console.log(schema);
 									valid = false;
+								} else {
+									item[key].values = incoming.Body[key];
 								}
 							});
 
@@ -564,6 +561,12 @@ exports.PUThandler = function (incoming){
 								ResponseMessageTo(incoming.Header.ResQ, response);
 								return;
 							} 
+
+							var params = {
+								TableName: table,
+								Item: item
+							};
+
 
 							console.log("Updating a new item...");
 							dynamodbDoc.put(params, function(err, dataToPut) {
