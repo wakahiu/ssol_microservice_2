@@ -151,7 +151,7 @@ exports.GEThandler = function (incoming) {
 						expression += name + " = " +  value;
 
 						//if not last element
-						if (i < query_fields.length - 1) 
+						if (i < query_fields.length - 1)
 							expression += " AND ";
 					}
 
@@ -244,7 +244,7 @@ exports.POSThandler = function(incoming) {
 		addAttribute(incoming);
 	} else {
 		createStudent(incoming);
-	} 
+	}
 }
 
 var addAttribute = function(incoming) {
@@ -323,7 +323,7 @@ var addAttribute = function(incoming) {
 				}
 			}
 		}
-	}); 
+	});
 
 }
 
@@ -396,7 +396,7 @@ var createStudent = function (incoming){
 						":value":"micro"
 					}
 				};
-				
+
 				// Fetch schema first
 				dynamodbDoc.query(schema_params, function(err, data) {
 					if (err) {
@@ -418,7 +418,7 @@ var createStudent = function (incoming){
 							var valid = true;
 							var schema = data.Items[0].attributes.values;
 							var param_keys = Object.keys(incoming.Body);
-							
+
 							_(param_keys).forEach(function(key) {
 								if (_.indexOf(schema, key) == -1) {
 									console.log(key);
@@ -433,7 +433,7 @@ var createStudent = function (incoming){
 								response['Code'] = '400';
 								ResponseMessageTo(incoming.Header.ResQ, response);
 								return;
-							} 
+							}
 
 							dynamodbDoc.put(params, function(err, dataToPut) {
 								if (err) {
@@ -469,7 +469,7 @@ var createStudent = function (incoming){
 			}
 		}
 	});
-	
+
 	console.log("Adding a new item...");
 }
 
@@ -561,7 +561,7 @@ exports.PUThandler = function (incoming){
 								response['Code'] = '400';
 								ResponseMessageTo(incoming.Header.ResQ, response);
 								return;
-							} 
+							}
 
 							var params = {
 								TableName: table,
@@ -583,7 +583,7 @@ exports.PUThandler = function (incoming){
 									console.log("Added item:", JSON.stringify(dataToPut, null, 2));
 									message = 'OK: Student successfully updated';
 									response['Body'] = message;
-									response['Code'] = '200';
+									response['Code'] = '204';
 									ResponseMessageTo(incoming.Header.ResQ, response);
 								}
 							});
@@ -619,7 +619,7 @@ exports.DELETEhandler = function(incoming) {
 		deleteAttribute(incoming);
 	} else {
 		deleteStudent(incoming);
-	} 
+	}
 };
 
 var deleteAttribute = function(incoming) {
@@ -640,8 +640,8 @@ var deleteAttribute = function(incoming) {
 	}
 
 	// Cannot delete firstname, lastname, id
-	if (attribute == 'id' || 
-		attribute == 'firstname' || 
+	if (attribute == 'id' ||
+		attribute == 'firstname' ||
 		attribute == 'lastname') {
 		message = "Bad Request: Attribute specified cannot be removed";
 		response['Body'] = message;
@@ -710,7 +710,7 @@ var deleteAttribute = function(incoming) {
 				}
 			}
 		}
-	}); 
+	});
 };
 
 var deleteStudent = function (incoming){
@@ -777,7 +777,7 @@ var deleteStudent = function (incoming){
 						console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
 						message['Message'] = 'Student successfully deleted';
 						response['Body'] = message;
-						response['Code'] = '202';
+						response['Code'] = '204';
 						ResponseMessageTo(incoming.Header.ResQ, response);
 					}
 				});
