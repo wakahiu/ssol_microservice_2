@@ -12,6 +12,9 @@
     * clients.`<client_name>`.Qname_out
     * clients.`<client_name>`.Qname_in
     * gateway.`<client_name>`.Qname_out
+4. Create Dynamo Tables using the online AWS console.  Make sure each table has the keys and fields specified in the `config.json.` Additionally, Be sure to name the tables in accordance with the ones listed in the `congif.json` file:
+    * table
+    * schema_table
 
 ## Additional Configuration
 In addition to the AWS setup, each client must be configured in the `config.json` file using the following form:

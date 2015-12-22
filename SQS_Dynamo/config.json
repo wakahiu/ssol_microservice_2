@@ -5,16 +5,18 @@
 		"region"	: "<us-___>",
 		"queueUrl"	: "<https://____.amazonaws.com/path2queues/"
 	},
+	"table": "micro",
+	"schema_table": "micro_schema",
 	"clients":{
 		"client0":{
 			"Qname_out"	: "client0_out",
 			"Qname_in"	: "client0_in",
 			"Req":{
 				"Header":{
-					"OP":"GET",
-					"ID":1234			
+					"OP":"GET"
 				},
-				"Body":"this is a test"	
+				"Body":{
+				}
 			}
 		},
 		"client1":{
@@ -22,11 +24,13 @@
 			"Qname_in"	: "client1_in",
 			"Req":{
 				"Header":{
-					"OP":"PUT",
-					"ID":5678			
+					"OP":"POST",
+					"SCHEMA_ACTION":false
 				},
 				"Body":{
-					"name":"Peter"
+					"firstname":"Peter",
+					"lastname":"Burrows",
+					"id": "9876"
 				}	
 			}
 		}
@@ -36,4 +40,3 @@
 	}
 
 }
-
