@@ -40,12 +40,19 @@ In addition to the AWS setup, each client must be configured in the `config.json
 
 ## Setup 
 
-### Setup Script (For Users with gnome-terminal installed)
-In the working directory, the `runAll.sh` shell script can be executed to set up the environment.  Instructions on configuring the script are seen within the script.  Once configured, the script can be executed from the command line as follows:
+### Setup Script
+In the working directory, a shell script can be executed to set up the environment.  Instructions on configuring the script are seen within the script.  Once configured, the script can be executed from the command line as follows:
 
-`$ source runAll.sh`
+#### For Linux Users with `gnome-terminal` installed
 
-### Manual Setup (For Users without gnome-terminal installed)
+`$ source LINUX_setup_environment.sh`
+
+#### For MAC Users with `iTerm` installed
+
+`$ source MAC_setup_environment.sh`
+
+
+### Manual Setup (For Users who elected not to use the setup script)
 1. `node ./studentsDynamoDB/app.js`
 2. `node gateway.js`
 3. `node client.js <client_name>` (can have more than one client)
