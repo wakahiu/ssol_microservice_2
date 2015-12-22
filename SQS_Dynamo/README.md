@@ -49,7 +49,7 @@ In the working directory, a shell script can be executed to set up the environme
 
 #### For MAC Users with `iTerm` installed
 
-`$ source MAC_setup_environment.sh`
+`$ ./MAC_setup_environment.sh`
 
 
 ### Manual Setup (For Users who elected not to use the setup script)
