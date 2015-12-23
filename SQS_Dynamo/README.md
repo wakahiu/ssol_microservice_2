@@ -55,7 +55,8 @@ In the working directory, a shell script can be executed to set up the environme
 ### Manual Setup (For Users who elected not to use the setup script)
 1. `node ./studentsDynamoDB/app.js`
 2. `node gateway.js`
-3. `node client.js <client_name>` (can have more than one client)
+3. `node client.js <client_name>`
+4. To add another client repeat Step 3
 
 ### For the Example that has been pushed, execute the following in 4 separate terminals
 1. `node ./studentsDynamoDB/app.js`
